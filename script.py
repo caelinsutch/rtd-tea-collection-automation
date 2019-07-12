@@ -5,7 +5,6 @@ from xmljson import badgerfish as bf
 import json
 import xlsxwriter
 
-
 data = pd.read_excel (r'rtd.xlsx', sheet_name='Sheet1')
 
 dataFrame = pd.DataFrame(data, columns=['Product'])
@@ -21,7 +20,8 @@ writer = pd.ExcelWriter('result-data.xlsx', engine='xlsxwriter')
 # TODO create a better way to do this that preserves dataframe type
 for count, element in enumerate(dataInList, 1):
     # Iterate through list created from xcel sheet
-    if count % 10 == 0:
+    # Change the number to choose how much data you want, I chose every 10 while testing. For production, make sure it's every 1
+    if count % 1 == 0:
         productName = ''
         # globals for nutrition count
         calories = ''
