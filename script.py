@@ -31,7 +31,7 @@ for count, element in enumerate(dataInList, 1):
         sugar = ''
 
         # Make new xcel file
-        xmlFile = open("res{}.xml".format(count), "w+")
+        xmlFile = open("xml/res{}.xml".format(count), "w+")
         # Get first 4 words from spreadsheet and put to sample data
         sampleData = element[0].split()[:4]
         productName = element[0]
@@ -50,7 +50,7 @@ for count, element in enumerate(dataInList, 1):
 
         # Gets XML from file
         try:
-            parsedXML = ET.parse('./res{}.xml'.format(count))
+            parsedXML = ET.parse('xml/res{}.xml'.format(count))
             root = parsedXML.getroot()
             # Root is a xml.etree.ElementTree.element type
 
@@ -63,6 +63,7 @@ for count, element in enumerate(dataInList, 1):
 
                 # Request data for individual product
                 if listOfDbNumbers:
+                    # Check to make sure theres database numbers
                     resjson = requests.get("https://api.nal.usda.gov/ndb/V2/reports?ndbno={}&format=json&api_key=c7bdD3Mz5KQjggqv5B8hNpeov3fsBnlBB7Gb3wPU".format(int(listOfDbNumbers[0])))
                     # Turn into dictionary
                     object = json.loads(resjson.content)
@@ -70,7 +71,7 @@ for count, element in enumerate(dataInList, 1):
                     nutrients = object.get("foods", {})[0].get('food', {}).get('nutrients', {})
 
                     for i in range(len(nutrients)):
-                        # List of Possible Names:
+                        # List of Possible Names (not complete):
                         # - Energy
                         # - Protein
                         # - Total lipid (fat)
@@ -95,14 +96,26 @@ for count, element in enumerate(dataInList, 1):
                             carbs = nutrients[3].get('value')
 
                     # Assign
-                    servingSize = str(nutrients[0].get('measures')[0].get('eqv')) + nutrients[0].get('measures')[0].get('eunit')
+                    servingSize = str(nutrients[0].get('measures')[0].get('eqv')) + nutrients[0].get('measures')[0].get('eunit') # Pulls serving size from the first one
+                    # Create object with all of the nutrition info
                     dataToWrite = {'Product Name': productName, 'Serving Size': servingSize, 'Calories': calories, 'Protein': protein, 'Fat': fat, 'Carbs': carbs, 'Sugar': sugar}
+                    # Add to array that is put into excel file
                     finalDataArray.append(dataToWrite)
+            else:
+                # Make empty row if blank
+                dataToWrite = {'Product Name': '', 'Serving Size': '', 'Calories': '', 'Protein': '', 'Fat': '', 'Carbs': '', 'Sugar': ''}
+                finalDataArray.append(dataToWrite)
         except:
+            # If malformed XMl returned, make empty row
             print('Malformed XML')
+            dataToWrite = {'Product Name': '', 'Serving Size': '', 'Calories': '', 'Protein': '', 'Fat': '', 'Carbs': '', 'Sugar': ''}
+            finalDataArray.append(dataToWrite)
 
+# Make a data frame from the array of objects
 dataFrameFinal = pd.DataFrame(finalDataArray)
+# Write to Sheet1 in an excel file
 dataFrameFinal.to_excel(writer, sheet_name='Sheet1')
+# Save file and end program
 writer.save()
 
 
